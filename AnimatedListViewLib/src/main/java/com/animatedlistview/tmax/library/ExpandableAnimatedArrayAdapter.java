@@ -2,13 +2,11 @@ package com.animatedlistview.tmax.library;
 
 import android.content.Context;
 import android.support.v4.view.ViewCompat;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
-import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -76,6 +74,9 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                     if(!viewOutOfBounds) listView.smoothScrollBy(change, 0);
                 };
             });
+        }else if(view.getTop() < listView.getTop()){
+            int scrollDistance = view.getTop()-listView.getTop();
+            listView.smoothScrollBy(scrollDistance, (int)expandAnimationDuration*2);
         }
 
         expandAnimation.setAnimationListener(new Animation.AnimationListener() {
@@ -111,6 +112,12 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 expandedView.getMeasuredHeight(),
                 false);
         a.setDuration(expandAnimationDuration);
+
+        final View view = getViewAt(position);
+        if(view.getTop() < listView.getTop()){
+            int scrollDistance = view.getTop()-listView.getTop();
+            listView.smoothScrollBy(scrollDistance, (int)expandAnimationDuration*2);
+        }
 
         a.setAnimationListener(new Animation.AnimationListener() {
             @Override
