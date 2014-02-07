@@ -1,11 +1,12 @@
-package com.animatedlistview.tmax.library;
+package com.animatedlistview.tmax.test;
 
 import android.content.Context;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 import android.widget.TextView;
+
+import com.animatedlistview.tmax.library.ExpandableAnimatedArrayAdapter;
+import com.animatedlistview.tmax.library.R;
 
 import java.util.List;
 
@@ -14,13 +15,8 @@ import java.util.List;
  */
 public class PruebaExtendAdapter extends ExpandableAnimatedArrayAdapter<String> {
 
-    private final Context context;
-    private final List<String> mList;
-
     public PruebaExtendAdapter(Context context, int layoutResource, int expandableResource, List<String> mList) {
         super(context, layoutResource, expandableResource, mList);
-        this.context = context;
-        this.mList = mList;
     }
 
     @Override
