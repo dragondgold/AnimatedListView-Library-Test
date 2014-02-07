@@ -76,8 +76,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                     if(!viewOutOfBounds) listView.smoothScrollBy(change, 0);
                 };
             });
-
-        }else viewOutOfBounds = false;
+        }
 
         expandAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
