@@ -48,7 +48,7 @@ public class MainActivity extends Activity {
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Toast.makeText(MainActivity.this, "Item " + i + " clickeado", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(MainActivity.this, "Item " + i + " clickeado", Toast.LENGTH_SHORT).show();
                 if(pruebaAdapter.isExpanded(i)) pruebaAdapter.collapse(i);
                 else pruebaAdapter.expand(i);
             }
