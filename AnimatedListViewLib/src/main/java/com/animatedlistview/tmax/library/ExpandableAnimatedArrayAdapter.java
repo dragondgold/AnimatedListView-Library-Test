@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
+import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -41,16 +42,17 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
      */
     public void expand (final int position){
 
+        final boolean viewOutOfBounds;
         final View view = getViewAt(position);
         final View expandedView = view.findViewById(expandableResource);
         ViewCompat.setHasTransientState(expandedView, true);
         expandedView.measure(0,0);
 
-        final ExpandCollapseAnimation a = new ExpandCollapseAnimation(
+        final ExpandCollapseAnimation expandAnimation = new ExpandCollapseAnimation(
                 expandedView,
                 expandedView.getMeasuredHeight(),
                 true);
-        a.setDuration(expandAnimationDuration);
+        expandAnimation.setDuration(expandAnimationDuration);
 
         // Si expando el último item de la lista o si el item que expando no entra en los márgenes del ListView
         //  voy deslizando la lista a medida que la animación expande el View
@@ -59,18 +61,23 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
             // Si el View esta pasandose de los limites pero se ve (por ejemplo un item al final que se ve
             //  sólo la mitad) muevo la lista hasta que se vea el View por completo
             if(view.getBottom() > listView.getHeight()){
-                listView.smoothScrollBy(view.getBottom() - listView.getHeight(), 0);
-            }
+                int scrollDistance = view.getBottom() - listView.getHeight();
+                scrollDistance += expandedView.getMeasuredHeight();
 
-            a.setAnimationTransformationListener(new OnAnimationValueChanged() {
-                @Override
-                public void onAnimationValueChanged(int value, int change) {
-                    listView.smoothScrollBy(change, 0);
-                }
-            });
-        }
+                listView.smoothScrollBy(scrollDistance, (int)expandAnimationDuration*2);
+                viewOutOfBounds = true;
+            }else viewOutOfBounds = false;
+        }else viewOutOfBounds = false;
 
-        a.setAnimationListener(new Animation.AnimationListener() {
+        // Scrolleo la lista a medida que expando. No hago nada si expando un View que se ve incompleto
+        //  en el final de la lista porque ya me encargué del scroll antes
+        expandAnimation.setAnimationTransformationListener(new OnAnimationValueChanged() {
+            @Override
+            public void onAnimationValueChanged(int value, int change) {
+                if(!viewOutOfBounds) listView.smoothScrollBy(change, 0);
+            };
+        });
+        expandAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
             }
@@ -85,7 +92,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
             public void onAnimationRepeat(Animation animation) {
             }
         });
-        expandedView.startAnimation(a);
+        expandedView.startAnimation(expandAnimation);
     }
 
     /**
