@@ -3,7 +3,6 @@ package com.animatedlistview.tmax.library;
 import android.content.Context;
 import android.support.v4.view.ViewCompat;
 import android.util.Log;
-import android.util.SparseArray;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,7 +11,6 @@ import android.view.animation.Animation;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> {
@@ -38,31 +36,47 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
      */
     public void expand (final int position){
 
-        final View expandedView = getViewAt(position).findViewById(expandableResource);
+        final View view = getViewAt(position);
+        final View expandedView = view.findViewById(expandableResource);
         ViewCompat.setHasTransientState(expandedView, true);
         expandedView.measure(0,0);
 
-        ExpandCollapseAnimation a = new ExpandCollapseAnimation(
+        final ExpandCollapseAnimation a = new ExpandCollapseAnimation(
                 expandedView,
                 expandedView.getMeasuredHeight(),
                 true);
         a.setDuration(400);
+
+        // Si expando el último item de la lista o si el item que expando no entra en los márgenes del ListView
+        //  voy deslizando la lista a medida que la animación expande el View
+        if(position == getCount()-1 || (view.getBottom() + expandedView.getMeasuredHeight()) > listView.getHeight()){
+
+            // Si el View esta pasandose de los limites pero se ve (por ejemplo un item al final que se ve
+            //  sólo la mitad) muevo la lista hasta que se vea el View por completo
+            if(view.getBottom() > listView.getHeight()){
+                listView.smoothScrollBy(view.getBottom() - listView.getHeight(), 0);
+            }
+
+            a.setAnimationTransformationListener(new OnAnimationValueChanged() {
+                @Override
+                public void onAnimationValueChanged(int value, int change) {
+                    listView.smoothScrollBy(change, 0);
+                }
+            });
+        }
+
         a.setAnimationListener(new Animation.AnimationListener() {
             @Override
-            public void onAnimationStart(Animation animation) {
-                Log.i("Animation", "Animation expand " + position + " started");
-            }
+            public void onAnimationStart(Animation animation) {}
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                Log.i("Animation", "Animation expand " + position + " ended");
                 booleanArray.put(position, true);
                 ViewCompat.setHasTransientState(expandedView, false);
             }
 
             @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
+            public void onAnimationRepeat(Animation animation) {}
         });
         expandedView.startAnimation(a);
     }
@@ -82,23 +96,19 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 expandedView.getMeasuredHeight(),
                 false);
         a.setDuration(400);
+
         a.setAnimationListener(new Animation.AnimationListener() {
             @Override
-            public void onAnimationStart(Animation animation) {
-                Log.i("Animation", "Animation collapse " + position + " started");
-            }
+            public void onAnimationStart(Animation animation) {}
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                Log.i("Animation", "Animation collapse " + position + " ended");
                 booleanArray.put(position, false);
                 ViewCompat.setHasTransientState(expandedView, false);
             }
 
             @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
+            public void onAnimationRepeat(Animation animation) {}
         });
         expandedView.startAnimation(a);
     }
