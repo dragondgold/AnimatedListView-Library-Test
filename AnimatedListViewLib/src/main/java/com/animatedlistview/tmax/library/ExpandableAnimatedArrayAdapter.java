@@ -21,6 +21,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
     private Context context;
     private ListView listView;
+    private long expandAnimationDuration = 400;
 
     public ExpandableAnimatedArrayAdapter(Context context, int layoutResource, int expandableResource, List<T> list) {
         super(context, layoutResource, list);
@@ -28,6 +29,10 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
         this.expandableResource = expandableResource;
         this.layoutResource = layoutResource;
         this.context = context;
+    }
+
+    public void setExpandAnimationDuration (long duration){
+        expandAnimationDuration = duration;
     }
 
     /**
@@ -45,7 +50,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 expandedView,
                 expandedView.getMeasuredHeight(),
                 true);
-        a.setDuration(400);
+        a.setDuration(expandAnimationDuration);
 
         // Si expando el último item de la lista o si el item que expando no entra en los márgenes del ListView
         //  voy deslizando la lista a medida que la animación expande el View
@@ -67,7 +72,8 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
         a.setAnimationListener(new Animation.AnimationListener() {
             @Override
-            public void onAnimationStart(Animation animation) {}
+            public void onAnimationStart(Animation animation) {
+            }
 
             @Override
             public void onAnimationEnd(Animation animation) {
@@ -76,7 +82,8 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
             }
 
             @Override
-            public void onAnimationRepeat(Animation animation) {}
+            public void onAnimationRepeat(Animation animation) {
+            }
         });
         expandedView.startAnimation(a);
     }
@@ -95,7 +102,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 expandedView,
                 expandedView.getMeasuredHeight(),
                 false);
-        a.setDuration(400);
+        a.setDuration(expandAnimationDuration);
 
         a.setAnimationListener(new Animation.AnimationListener() {
             @Override
