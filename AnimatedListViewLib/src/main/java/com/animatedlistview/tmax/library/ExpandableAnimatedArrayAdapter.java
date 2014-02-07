@@ -56,9 +56,9 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
         // Si expando el último item de la lista o si el item que expando no entra en los márgenes del ListView
         //  voy deslizando la lista a medida que la animación expande el View
-        if(position == getCount()-1 || (view.getBottom() + expandedView.getMeasuredHeight()) > listView.getHeight()){
+        if((view.getBottom() + expandedView.getMeasuredHeight()) > listView.getHeight()){
 
-            // Si el View esta pasandose de los limites pero se ve (por ejemplo un item al final que se ve
+            // Si el View esta pasándose de los limites pero se ve (por ejemplo un item al final que se ve
             //  sólo la mitad) muevo la lista hasta que se vea el View por completo
             if(view.getBottom() > listView.getHeight()){
                 int scrollDistance = view.getBottom() - listView.getHeight();
@@ -67,16 +67,18 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 listView.smoothScrollBy(scrollDistance, (int)expandAnimationDuration*2);
                 viewOutOfBounds = true;
             }else viewOutOfBounds = false;
+
+            // Scrolleo la lista a medida que expando. No hago nada si expando un View que se ve incompleto
+            //  en el final de la lista porque ya me encargué del scroll antes
+            expandAnimation.setAnimationTransformationListener(new OnAnimationValueChanged() {
+                @Override
+                public void onAnimationValueChanged(int value, int change) {
+                    if(!viewOutOfBounds) listView.smoothScrollBy(change, 0);
+                };
+            });
+
         }else viewOutOfBounds = false;
 
-        // Scrolleo la lista a medida que expando. No hago nada si expando un View que se ve incompleto
-        //  en el final de la lista porque ya me encargué del scroll antes
-        expandAnimation.setAnimationTransformationListener(new OnAnimationValueChanged() {
-            @Override
-            public void onAnimationValueChanged(int value, int change) {
-                if(!viewOutOfBounds) listView.smoothScrollBy(change, 0);
-            };
-        });
         expandAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
