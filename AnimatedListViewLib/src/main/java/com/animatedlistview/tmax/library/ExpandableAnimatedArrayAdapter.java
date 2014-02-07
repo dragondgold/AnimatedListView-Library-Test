@@ -30,12 +30,16 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
         this.context = context;
     }
 
+    /**
+     * Sets the duration for the expanding animation
+     * @param duration duration in milli-seconds
+     */
     public void setExpandAnimationDuration (long duration){
         expandAnimationDuration = duration;
     }
 
     /**
-     * Expande la item en la posición dada
+     * Expands the item at the given position
      * @param position
      */
     public void expand (final int position){
@@ -52,12 +56,11 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 true);
         expandAnimation.setDuration(expandAnimationDuration);
 
-        // Si expando el último item de la lista o si el item que expando no entra en los márgenes del ListView
-        //  voy deslizando la lista a medida que la animación expande el View
+        // If I have to expand an item which doesn't fit in the ListView bounds when is expanded, scroll the
+        //  ListView to fit the item and the expanded View
         if((view.getBottom() + expandedView.getMeasuredHeight()) > listView.getHeight()){
 
-            // Si el View esta pasándose de los limites pero se ve (por ejemplo un item al final que se ve
-            //  sólo la mitad) muevo la lista hasta que se vea el View por completo
+            // Item only visible partially at the bottom of the list
             if(view.getBottom() > listView.getHeight()){
                 int scrollDistance = view.getBottom() - listView.getHeight();
                 scrollDistance += expandedView.getMeasuredHeight();
@@ -66,14 +69,14 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 viewOutOfBounds = true;
             }else viewOutOfBounds = false;
 
-            // Scrolleo la lista a medida que expando. No hago nada si expando un View que se ve incompleto
-            //  en el final de la lista porque ya me encargué del scroll antes
+            // Scroll ListView while the animation expands the View
             expandAnimation.setAnimationTransformationListener(new OnAnimationValueChanged() {
                 @Override
                 public void onAnimationValueChanged(int value, int change) {
                     if(!viewOutOfBounds) listView.smoothScrollBy(change, 0);
                 };
             });
+        // Scroll the View if the item at the top of the list isn't displayed completely
         }else if(view.getTop() < listView.getTop()){
             int scrollDistance = view.getTop()-listView.getTop();
             listView.smoothScrollBy(scrollDistance, (int)expandAnimationDuration*2);
@@ -98,12 +101,13 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
     }
 
     /**
-     * Cierra el item en la posición dada
+     * Collapse the item at the given position
      * @param position
      */
     public void collapse (final int position){
 
-        final View expandedView = getViewAt(position).findViewById(expandableResource);
+        final View view = getViewAt(position);
+        final View expandedView = view.findViewById(expandableResource);
         ViewCompat.setHasTransientState(expandedView, true);
         expandedView.measure(0,0);
 
@@ -113,9 +117,8 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 false);
         a.setDuration(expandAnimationDuration);
 
-        final View view = getViewAt(position);
         if(view.getTop() < listView.getTop()){
-            int scrollDistance = view.getTop()-listView.getTop();
+            int scrollDistance = view.getTop() - listView.getTop();
             listView.smoothScrollBy(scrollDistance, (int)expandAnimationDuration*2);
         }
 
@@ -136,7 +139,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
     }
 
     /**
-     * Determina si el item en la posición dada esta expandido o no
+     * Checks if the item is expanded or collapsed
      * @param position
      * @return
      */
@@ -147,10 +150,9 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
     public abstract View getItemView(int position, View convertView, ViewGroup parent);
 
     /**
-     * Obtiene el Child del ListView en la posición dada basando en la posición guardada
-     * en el ViewHolder de cada View
-     * @param position posición del View que se quiere obtener
-     * @return View en la posición indicada
+     * Gets the Child View of the ListView at the given position
+     * @param position
+     * @return
      */
     private View getViewAt (int position){
         final int firstPosition = listView.getFirstVisiblePosition() - listView.getHeaderViewsCount();

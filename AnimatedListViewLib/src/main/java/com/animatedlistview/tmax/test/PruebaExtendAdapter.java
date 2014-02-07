@@ -11,7 +11,7 @@ import com.animatedlistview.tmax.library.R;
 import java.util.List;
 
 /**
- * Created by andres on 2/6/14.
+ * Simple ArrayAdapter<>. Just extends ExpandableAnimatedArrayAdapter<> and animations are done automatically
  */
 public class PruebaExtendAdapter extends ExpandableAnimatedArrayAdapter<String> {
 
