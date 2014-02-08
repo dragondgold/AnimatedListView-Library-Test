@@ -40,7 +40,6 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
     /**
      * Expands the item at the given position
-     * @param position
      */
     public void expand (final int position){
 
@@ -74,7 +73,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 @Override
                 public void onAnimationValueChanged(int value, int change) {
                     if(!viewOutOfBounds) listView.smoothScrollBy(change, 0);
-                };
+                }
             });
         // Scroll the View if the item at the top of the list isn't displayed completely
         }else if(view.getTop() < listView.getTop()){
@@ -102,7 +101,6 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
     /**
      * Collapse the item at the given position
-     * @param position
      */
     public void collapse (final int position){
 
@@ -140,8 +138,6 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
     /**
      * Checks if the item is expanded or collapsed
-     * @param position
-     * @return
      */
     public boolean isExpanded (int position){
         return booleanArray.get(position);
@@ -151,29 +147,29 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
     /**
      * Gets the Child View of the ListView at the given position
-     * @param position
-     * @return
      */
     private View getViewAt (int position){
         final int firstPosition = listView.getFirstVisiblePosition() - listView.getHeaderViewsCount();
         final int wantedChild = position - firstPosition;
 
         if (wantedChild < 0 || wantedChild >= listView.getChildCount()) {
-            throw new IllegalArgumentException("La posicion requerida no se encuentra visible");
+            throw new IllegalArgumentException("Required position is not currently visible");
         }
         return listView.getChildAt(wantedChild);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        // Defino el ListView la primera vez
+        // The first time, get the ListView
         if(listView == null) listView = (ListView) parent;
 
+        // Inflate the new Views, otherwise we reuse them
         if(convertView == null){
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(layoutResource, null);
         }
 
+        // Expand/collapse the Views according to the saved state
         View expandable = convertView.findViewById(expandableResource);
 
         if(isExpanded(position)){
@@ -183,6 +179,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
             expandable.getLayoutParams().height = 0;
         }
 
+        // Let the user implement their own actions on the convertView and then return it
         return getItemView(position, convertView, parent);
     }
 }
