@@ -21,6 +21,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
     private Context context;
     private ListView listView;
     private long expandAnimationDuration = 400;
+    private long collapseAnimationDuration = 400;
 
     public ExpandableAnimatedArrayAdapter(Context context, int layoutResource, int expandableResource, List<T> list) {
         super(context, layoutResource, list);
@@ -36,6 +37,14 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
      */
     public void setExpandAnimationDuration (long duration){
         expandAnimationDuration = duration;
+    }
+
+    /**
+     * Sets the duration for the collapsing animation
+     * @param duration duration in milli-seconds
+     */
+    public void setCollapseAnimationDuration (long duration){
+        collapseAnimationDuration = duration;
     }
 
     /**
@@ -111,20 +120,22 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 expandedView,
                 expandedView.getMeasuredHeight(),
                 false);
-        collapseAnimation.setDuration(expandAnimationDuration);
+        collapseAnimation.setDuration(collapseAnimationDuration);
 
+        // If view is partially displayed on the top side of the list
         if (view.getTop() < listView.getTop()) {
             int scrollDistance = view.getTop() - listView.getTop();
-            listView.smoothScrollBy(scrollDistance, (int) expandAnimationDuration * 2);
+            listView.smoothScrollBy(scrollDistance, (int) collapseAnimationDuration * 2);
         }
 
+        // If the title view is only partially displayed
         if ((view.getBottom() - expandedView.getMeasuredHeight()) > listView.getBottom()) {
             if (position == getCount() - 1) {
                 int titleHeight = view.getHeight() - expandedView.getMeasuredHeight();
                 int visibleSection = listView.getBottom() - view.getTop();
                 int distance = titleHeight - visibleSection;
 
-                listView.smoothScrollBy(distance, (int)expandAnimationDuration*2);
+                listView.smoothScrollBy(distance, (int)collapseAnimationDuration*2);
             } else if(view.getBottom() > listView.getBottom()) {
                 collapseAnimation.setAnimationTransformationListener(new OnAnimationValueChanged() {
                     @Override
