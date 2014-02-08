@@ -57,10 +57,10 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
         // If I have to expand an item which doesn't fit in the ListView bounds when is expanded, scroll the
         //  ListView to fit the item and the expanded View
-        if ((view.getBottom() + expandedView.getMeasuredHeight()) > listView.getHeight()) {
+        if ((view.getBottom() + expandedView.getMeasuredHeight()) > listView.getBottom()) {
             // Item only visible partially at the bottom of the list
-            if (view.getBottom() > listView.getHeight()) {
-                int scrollDistance = view.getBottom() - listView.getHeight();
+            if (view.getBottom() > listView.getBottom()) {
+                int scrollDistance = view.getBottom() - listView.getBottom();
                 scrollDistance += expandedView.getMeasuredHeight();
 
                 listView.smoothScrollBy(scrollDistance, (int) expandAnimationDuration * (position == getCount() - 1 ? 4 : 2));
@@ -102,6 +102,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
      */
     public void collapse (final int position){
 
+        final View view = getViewAt(position);
         final View expandedView = getViewAt(position).findViewById(expandableResource);
         ViewCompat.setHasTransientState(expandedView, true);
         expandedView.measure(0, 0);
@@ -112,15 +113,18 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 false);
         collapseAnimation.setDuration(expandAnimationDuration);
 
-        final View view = getViewAt(position);
         if (view.getTop() < listView.getTop()) {
             int scrollDistance = view.getTop() - listView.getTop();
             listView.smoothScrollBy(scrollDistance, (int) expandAnimationDuration * 2);
         }
 
-        if ((view.getBottom()-expandedView.getMeasuredHeight()) > listView.getBottom()) {
+        if ((view.getBottom() - expandedView.getMeasuredHeight()) > listView.getBottom()) {
             if (position == getCount() - 1) {
-                //#FIXME
+                int titleHeight = view.getHeight() - expandedView.getMeasuredHeight();
+                int visibleSection = listView.getBottom() - view.getTop();
+                int distance = titleHeight - visibleSection;
+
+                listView.smoothScrollBy(distance, (int)expandAnimationDuration*2);
             } else if(view.getBottom() > listView.getBottom()) {
                 collapseAnimation.setAnimationTransformationListener(new OnAnimationValueChanged() {
                     @Override
@@ -130,7 +134,6 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 });
             }
         }
-
 
         collapseAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
