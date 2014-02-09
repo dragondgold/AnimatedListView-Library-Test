@@ -10,6 +10,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.animatedlistview.tmax.library.OnItemDeleted;
 import com.animatedlistview.tmax.library.R;
 
 import java.util.ArrayList;
@@ -33,6 +34,14 @@ public class MainActivity extends Activity {
         pruebaAdapter = new PruebaExtendAdapter(this, R.layout.expandable_list_item, R.id.expandable, mList);
 
         mListView.setAdapter(pruebaAdapter);
+
+        pruebaAdapter.setOnItemDeleted(new OnItemDeleted() {
+            @Override
+            public boolean onItemDeleted(int position, View view) {
+                Toast.makeText(MainActivity.this, "Item " + position + " deleted", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+        });
     }
 
     @Override

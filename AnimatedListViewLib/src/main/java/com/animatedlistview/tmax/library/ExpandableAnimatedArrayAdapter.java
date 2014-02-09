@@ -2,7 +2,6 @@ package com.animatedlistview.tmax.library;
 
 import android.content.Context;
 import android.support.v4.view.ViewCompat;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -22,9 +21,12 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
     private Context context;
     private ListView listView;
+    private boolean isSwipping = false;
     private boolean isSwipeToDelete = false;
     private long expandAnimationDuration = 400;
     private long collapseAnimationDuration = 400;
+
+    private OnItemDeleted onItemDeleted;
 
     /**
      * ExpandableAnimatedArrayAdapter constructor
@@ -39,6 +41,14 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
         this.expandableResource = expandableResource;
         this.layoutResource = layoutResource;
         this.context = context;
+    }
+
+    public void setOnItemDeleted(OnItemDeleted onItemDeleted) {
+        this.onItemDeleted = onItemDeleted;
+    }
+
+    public void removeOnItemDeleted(OnItemDeleted onItemDeleted) {
+        onItemDeleted = null;
     }
 
     /**
@@ -223,7 +233,20 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         // The first time, get the ListView
-        if(listView == null) listView = (ListView) parent;
+        if(listView == null){
+            listView = (ListView) parent;
+
+            // Disable ListView scroll returning true when we are sliding a child View to remove it
+            listView.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+                    if(motionEvent.getAction() == MotionEvent.ACTION_MOVE && isSwipping){
+                        return true;
+                    }
+                    return false;
+                }
+            });
+        }
 
         // Inflate the new Views, otherwise we reuse them
         if(convertView == null){
@@ -236,28 +259,52 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 convertView.setOnTouchListener(new TouchEventHandler(){
                     @Override
                     public void onSwipeRight(MotionEvent motionEvent, View view, float distance) {
-                        if(isSwipeToDeleteEnabled())
+                        // If SwipeToDelete is enabled modify alpha and position of the View according to
+                        //  the distance swiped
+                        if(isSwipeToDeleteEnabled()){
                             view.setTranslationX(view.getTranslationX() + distance);
+
+                            float alpha = view.getTranslationX() / (listView.getWidth());
+                            view.setAlpha(1-alpha);
+                        }
                         super.onSwipeRight(motionEvent, view, distance);
                     }
 
                     @Override
                     public void onSwipeLeft(MotionEvent motionEvent, View view, float distance) {
-                        if(isSwipeToDeleteEnabled())
+                        if(isSwipeToDeleteEnabled()){
                             view.setTranslationX(view.getTranslationX() + distance);
+
+                            float alpha = -view.getTranslationX() / (listView.getWidth());
+                            view.setAlpha(1-alpha);
+                        }
                         super.onSwipeLeft(motionEvent, view, distance);
                     }
 
                     @Override
                     public void onSwipeFinish(MotionEvent motionEvent, View view) {
+                        isSwipping = false;
                         if(isSwipeToDeleteEnabled()){
+                            // Delete to the right side
                             if(view.getTranslationX() > listView.getWidth()/2){
-                                int position = listView.getPositionForView(view);
-                                remove(getItem(position));
+                                animateDeletion(view, listView.getWidth());
+
+                            // Delete to the left side
+                            }else if(view.getTranslationX() < -listView.getWidth()/2){
+                                animateDeletion(view, -listView.getWidth());
                             }
-                            view.setTranslationX(0);
+                            else{
+                                view.setTranslationX(0);
+                                view.setAlpha(1);
+                            }
                         }
                         super.onSwipeFinish(motionEvent, view);
+                    }
+
+                    @Override
+                    public void onSwipeStart(MotionEvent motionEvent, View view) {
+                        isSwipping = true;
+                        super.onSwipeStart(motionEvent, view);
                     }
 
                     @Override
@@ -269,7 +316,6 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                             else expand(position);
                             listView.invalidate();
                         }
-
                         super.onClick(motionEvent, view);
                     }
                 });
@@ -288,5 +334,63 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
         // Let the user implement their own actions on the convertView and then return it
         return getItemView(position, convertView, parent);
+    }
+
+    /**
+     * Animates View deletion to the right or to the left
+     * @param view View to animate
+     * @param target target translation (listView.getWidth() to the right and -listView.getWidth() to the left)
+     */
+    private void animateDeletion (final View view, final int target){
+        SwipeDeleteAnimation animation = new SwipeDeleteAnimation(view, target);
+        animation.setDuration(400);
+
+        animation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {}
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                // We MUST call clearAnimation() in this case because there is a bug with onAnimationEnd()
+                //  which is called when animation still doesn't end causing some flickers
+                view.clearAnimation();
+                final int defaultHeight = view.getHeight();
+
+                // Slowly close the removed view and finally remove it from adapter
+                ExpandCollapseAnimation a = new ExpandCollapseAnimation(view, defaultHeight, false);
+                a.setDuration(400);
+                a.setAnimationListener(new Animation.AnimationListener() {
+                    @Override
+                    public void onAnimationStart(Animation animation) {}
+
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        int position = listView.getPositionForView(view);
+
+                        if(onItemDeleted != null){
+                            // Delete item if returned value is true
+                            if(onItemDeleted.onItemDeleted(position, view)){
+                                remove(getItem(position));
+                            }
+                        // Default action, delete item
+                        }else{
+                            remove(getItem(position));
+                        }
+
+                        view.setTranslationX(0);
+                        view.getLayoutParams().height = defaultHeight;
+                        view.setAlpha(1);
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animation animation) {}
+                });
+                view.startAnimation(a);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {}
+        });
+        view.startAnimation(animation);
     }
 }

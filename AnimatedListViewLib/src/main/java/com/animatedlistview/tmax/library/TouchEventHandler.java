@@ -17,6 +17,8 @@ public class TouchEventHandler implements OnTouchListener {
 
         }else if(action == MotionEvent.ACTION_MOVE){
 
+            if(!swiping) onSwipeStart(motionEvent, view);
+
             if(motionEvent.getRawX() - prevX > 0){
                 onSwipeRight(motionEvent, view, motionEvent.getRawX() - prevX);
             }else{
@@ -38,6 +40,8 @@ public class TouchEventHandler implements OnTouchListener {
     }
 
     public void onClick(MotionEvent motionEvent, final View view) {}
+
+    public void onSwipeStart(MotionEvent motionEvent, final View view) {}
 
     public void onSwipeFinish(MotionEvent motionEvent, final View view) {}
 
