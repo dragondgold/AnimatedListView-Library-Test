@@ -2,9 +2,13 @@ package com.animatedlistview.tmax.test;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.animatedlistview.tmax.library.R;
 
@@ -29,14 +33,28 @@ public class MainActivity extends Activity {
         pruebaAdapter = new PruebaExtendAdapter(this, R.layout.expandable_list_item, R.id.expandable, mList);
 
         mListView.setAdapter(pruebaAdapter);
-
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if(pruebaAdapter.isExpanded(i)) pruebaAdapter.collapse(i);
-                else pruebaAdapter.expand(i);
-            }
-        });
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.swipe_to_delete:
+                if(pruebaAdapter.isSwipeToDeleteEnabled()){
+                    pruebaAdapter.setSwipeToDelete(false);
+                    Toast.makeText(this, "Swipe to delete disable", Toast.LENGTH_SHORT).show();
+                }else{
+                    pruebaAdapter.setSwipeToDelete(true);
+                    Toast.makeText(this, "Swipe to delete enabled", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
+        return true;
+    }
 }

@@ -2,8 +2,10 @@ package com.animatedlistview.tmax.library;
 
 import android.content.Context;
 import android.support.v4.view.ViewCompat;
+import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -20,9 +22,17 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
     private Context context;
     private ListView listView;
+    private boolean isSwipeToDelete = false;
     private long expandAnimationDuration = 400;
     private long collapseAnimationDuration = 400;
 
+    /**
+     * ExpandableAnimatedArrayAdapter constructor
+     * @param context context from the ListView
+     * @param layoutResource layout containing the child for each row
+     * @param expandableResource layout id which will be expanded/collapsed
+     * @param list List<T> containing the ArrayAdapter<T> data
+     */
     public ExpandableAnimatedArrayAdapter(Context context, int layoutResource, int expandableResource, List<T> list) {
         super(context, layoutResource, list);
 
@@ -48,7 +58,20 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
     }
 
     /**
+     * Enable or disable Swipe to delete in the ListView
+     * @param state true or false to enable or disable Swipe to delete
+     */
+    public void setSwipeToDelete (boolean state){
+        isSwipeToDelete = state;
+    }
+
+    public boolean isSwipeToDeleteEnabled(){
+        return isSwipeToDelete;
+    }
+
+    /**
      * Expands the item at the given position
+     * @param position position in the ListView to expand
      */
     public void expand (final int position){
 
@@ -108,6 +131,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
     /**
      * Collapse the item at the given position
+     * @param position position in the ListView to expand
      */
     public void collapse (final int position){
 
@@ -166,15 +190,25 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
     /**
      * Checks if the item is expanded or collapsed
+     * @param position position to check
      */
     public boolean isExpanded (int position){
         return booleanArray.get(position);
     }
 
+    /**
+     * You should Override this method in your ArrayAdapter instead of getView() method
+     * @param position position in the ListView
+     * @param convertView view that will be displayed in the ListView, it's already inflated so you
+     *                    don't need to null check it. You must return it at the end of the method.
+     * @param parent ViewGroup that holds all the views (ListView itself)
+     * @return View to be displayed at the given position
+     */
     public abstract View getItemView(int position, View convertView, ViewGroup parent);
 
     /**
      * Gets the Child View of the ListView at the given position
+     * @param position position of
      */
     private View getViewAt (int position){
         final int firstPosition = listView.getFirstVisiblePosition() - listView.getHeaderViewsCount();
@@ -195,6 +229,51 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
         if(convertView == null){
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(layoutResource, null);
+
+            // Add a TouchEventHandler for each new created view to handle click and swipe actions
+            // We use getRawX() to create a smooth translation (getX() doesn't translate the View smoothly)
+            if (convertView != null) {
+                convertView.setOnTouchListener(new TouchEventHandler(){
+                    @Override
+                    public void onSwipeRight(MotionEvent motionEvent, View view, float distance) {
+                        if(isSwipeToDeleteEnabled())
+                            view.setTranslationX(view.getTranslationX() + distance);
+                        super.onSwipeRight(motionEvent, view, distance);
+                    }
+
+                    @Override
+                    public void onSwipeLeft(MotionEvent motionEvent, View view, float distance) {
+                        if(isSwipeToDeleteEnabled())
+                            view.setTranslationX(view.getTranslationX() + distance);
+                        super.onSwipeLeft(motionEvent, view, distance);
+                    }
+
+                    @Override
+                    public void onSwipeFinish(MotionEvent motionEvent, View view) {
+                        if(isSwipeToDeleteEnabled()){
+                            if(view.getTranslationX() > listView.getWidth()/2){
+                                int position = listView.getPositionForView(view);
+                                remove(getItem(position));
+                            }
+                            view.setTranslationX(0);
+                        }
+                        super.onSwipeFinish(motionEvent, view);
+                    }
+
+                    @Override
+                    public void onClick(MotionEvent motionEvent, View view) {
+                        int position = listView.getPositionForView(view);
+
+                        if(!isSwipeToDeleteEnabled()){
+                            if(isExpanded(position)) collapse(position);
+                            else expand(position);
+                            listView.invalidate();
+                        }
+
+                        super.onClick(motionEvent, view);
+                    }
+                });
+            }
         }
 
         // Expand/collapse the Views according to the saved state

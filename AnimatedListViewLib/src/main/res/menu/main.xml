@@ -2,8 +2,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.animatedlistview.tmax.test.MainActivity" >
     
-    <item android:id="@+id/action_settings"
-        android:title="@string/action_settings"
+    <item android:id="@+id/swipe_to_delete"
+        android:title="Swipe to delete"
         android:orderInCategory="100"
         android:showAsAction="never" />
+
 </menu>
