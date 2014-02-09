@@ -1,5 +1,6 @@
 package com.animatedlistview.tmax.library;
 
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
@@ -11,6 +12,9 @@ public class TouchEventHandler implements OnTouchListener {
 
     public boolean onTouch(final View view, final MotionEvent motionEvent) {
         int action = motionEvent.getAction();
+
+        if(action == MotionEvent.ACTION_CANCEL)
+            Log.i("Swipe", "ACTION_CANCEL");
 
         if(action == MotionEvent.ACTION_DOWN){
             prevX = motionEvent.getRawX();
@@ -28,7 +32,8 @@ public class TouchEventHandler implements OnTouchListener {
             prevX = motionEvent.getRawX();
             swiping = true;
 
-        }else if(action == MotionEvent.ACTION_UP || ( swiping && action == MotionEvent.ACTION_CANCEL)){
+        }else if(action == MotionEvent.ACTION_UP){
+            Log.i("Swipe", "ACTION_UP");
             if(swiping){
                 onSwipeFinish(motionEvent, view);
                 swiping = false;
