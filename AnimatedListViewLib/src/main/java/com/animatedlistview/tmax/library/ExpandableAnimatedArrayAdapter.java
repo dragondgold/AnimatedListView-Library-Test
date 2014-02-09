@@ -21,11 +21,10 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
     private static final int DEFAULT_DELETE_DURATION = 400;
     private final int expandableResource;
     private final int layoutResource;
-    private final SparseBooleanArray booleanArray = new SparseBooleanArray();
+    private final SparseBooleanArray expandStateArray = new SparseBooleanArray();
 
     private final Context context;
     private ListView listView;
-    private boolean isSwiping = false;
     private boolean isSwipeToDelete = false;
     private long expandAnimationDuration = 400;
     private long collapseAnimationDuration = 400;
@@ -132,7 +131,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                booleanArray.put(position, true);
+                expandStateArray.put(position, true);
                 ViewCompat.setHasTransientState(expandedView, false);
             }
 
@@ -191,7 +190,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                booleanArray.put(position, false);
+                expandStateArray.put(position, false);
                 ViewCompat.setHasTransientState(expandedView, false);
             }
 
@@ -207,7 +206,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
      * @param position position to check
      */
     public boolean isExpanded (int position){
-        return booleanArray.get(position);
+        return expandStateArray.get(position);
     }
 
     /**
@@ -240,14 +239,61 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
         if(listView == null){
             listView = (ListView) parent;
 
-            // Disable ListView scroll returning true when we are sliding a child View to remove it
-            listView.setOnTouchListener(new View.OnTouchListener() {
+            listView.setOnTouchListener(new TouchEventHandler(listView){
                 @Override
-                public boolean onTouch(View view, MotionEvent motionEvent) {
-                    if(motionEvent.getAction() == MotionEvent.ACTION_MOVE && isSwiping){
-                        return true;
+                public void onSwipeRight(MotionEvent motionEvent, View view, float distance) {
+                    // If SwipeToDelete is enabled modify alpha and position of the View according to
+                    //  the distance swiped
+                    if(isSwipeToDeleteEnabled()){
+                        view.setTranslationX(view.getTranslationX() + distance);
+
+                        float alpha = view.getTranslationX() / (listView.getWidth());
+                        view.setAlpha(1-alpha);
                     }
-                    return false;
+                    super.onSwipeRight(motionEvent, view, distance);
+                }
+
+                @Override
+                public void onSwipeLeft(MotionEvent motionEvent, View view, float distance) {
+                    if(isSwipeToDeleteEnabled()){
+                        view.setTranslationX(view.getTranslationX() + distance);
+
+                        float alpha = -view.getTranslationX() / (listView.getWidth());
+                        view.setAlpha(1-alpha);
+                    }
+                    super.onSwipeLeft(motionEvent, view, distance);
+                }
+
+                @Override
+                public void onSwipeFinish(MotionEvent motionEvent, final View view) {
+                    if(isSwipeToDeleteEnabled()){
+                        // Delete to the right side
+                        if(view.getTranslationX() > listView.getWidth()/2){
+                            animateDeletion(view, listView.getWidth());
+                        }
+                        // Delete to the left side
+                        else if(view.getTranslationX() < -listView.getWidth()/2){
+                            animateDeletion(view, -listView.getWidth());
+                        }
+                        // Animate View to default positions
+                        else{
+                            ViewPropertyAnimator.animate(view).setDuration(DEFAULT_DELETE_DURATION).translationX(0).start();
+                            ViewPropertyAnimator.animate(view).setDuration(DEFAULT_DELETE_DURATION).alpha(1).start();
+                        }
+                    }
+                    super.onSwipeFinish(motionEvent, view);
+                }
+
+                @Override
+                public void onClick(MotionEvent motionEvent, View view) {
+                    int position = listView.getPositionForView(view);
+
+                    if(!isSwipeToDeleteEnabled()){
+                        if(isExpanded(position)) collapse(position);
+                        else expand(position);
+                        listView.invalidate();
+                    }
+                    super.onClick(motionEvent, view);
                 }
             });
         }
@@ -256,75 +302,6 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
         if(convertView == null){
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(layoutResource, null);
-
-            // Add a TouchEventHandler for each new created view to handle click and swipe actions
-            // We use getRawX() to create a smooth translation (getX() doesn't translate the View smoothly)
-            if (convertView != null) {
-                convertView.setOnTouchListener(new TouchEventHandler(){
-                    @Override
-                    public void onSwipeRight(MotionEvent motionEvent, View view, float distance) {
-                        // If SwipeToDelete is enabled modify alpha and position of the View according to
-                        //  the distance swiped
-                        if(isSwipeToDeleteEnabled()){
-                            view.setTranslationX(view.getTranslationX() + distance);
-
-                            float alpha = view.getTranslationX() / (listView.getWidth());
-                            view.setAlpha(1-alpha);
-                        }
-                        super.onSwipeRight(motionEvent, view, distance);
-                    }
-
-                    @Override
-                    public void onSwipeLeft(MotionEvent motionEvent, View view, float distance) {
-                        if(isSwipeToDeleteEnabled()){
-                            view.setTranslationX(view.getTranslationX() + distance);
-
-                            float alpha = -view.getTranslationX() / (listView.getWidth());
-                            view.setAlpha(1-alpha);
-                        }
-                        super.onSwipeLeft(motionEvent, view, distance);
-                    }
-
-                    @Override
-                    public void onSwipeFinish(MotionEvent motionEvent, final View view) {
-                        isSwiping = false;
-                        if(isSwipeToDeleteEnabled()){
-                            // Delete to the right side
-                            if(view.getTranslationX() > listView.getWidth()/2){
-                                animateDeletion(view, listView.getWidth());
-                            }
-                            // Delete to the left side
-                            else if(view.getTranslationX() < -listView.getWidth()/2){
-                                animateDeletion(view, -listView.getWidth());
-                            }
-                            // Animate View to default positions
-                            else{
-                                ViewPropertyAnimator.animate(view).setDuration(DEFAULT_DELETE_DURATION).translationX(0).start();
-                                ViewPropertyAnimator.animate(view).setDuration(DEFAULT_DELETE_DURATION).alpha(1).start();
-                            }
-                        }
-                        super.onSwipeFinish(motionEvent, view);
-                    }
-
-                    @Override
-                    public void onSwipeStart(MotionEvent motionEvent, View view) {
-                        isSwiping = true;
-                        super.onSwipeStart(motionEvent, view);
-                    }
-
-                    @Override
-                    public void onClick(MotionEvent motionEvent, View view) {
-                        int position = listView.getPositionForView(view);
-
-                        if(!isSwipeToDeleteEnabled()){
-                            if(isExpanded(position)) collapse(position);
-                            else expand(position);
-                            listView.invalidate();
-                        }
-                        super.onClick(motionEvent, view);
-                    }
-                });
-            }
         }
 
         // Expand/collapse the Views according to the saved state
