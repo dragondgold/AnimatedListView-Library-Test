@@ -19,9 +19,9 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
     private final int layoutResource;
     private final SparseBooleanArray booleanArray = new SparseBooleanArray();
 
-    private Context context;
+    private final Context context;
     private ListView listView;
-    private boolean isSwipping = false;
+    private boolean isSwiping = false;
     private boolean isSwipeToDelete = false;
     private long expandAnimationDuration = 400;
     private long collapseAnimationDuration = 400;
@@ -175,7 +175,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                     @Override
                     public void onAnimationValueChanged(int value, int change) {
                         listView.smoothScrollBy(change, 0);
-                    };
+                    }
                 });
             }
         }
@@ -240,7 +240,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
             listView.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View view, MotionEvent motionEvent) {
-                    if(motionEvent.getAction() == MotionEvent.ACTION_MOVE && isSwipping){
+                    if(motionEvent.getAction() == MotionEvent.ACTION_MOVE && isSwiping){
                         return true;
                     }
                     return false;
@@ -283,7 +283,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
                     @Override
                     public void onSwipeFinish(MotionEvent motionEvent, View view) {
-                        isSwipping = false;
+                        isSwiping = false;
                         if(isSwipeToDeleteEnabled()){
                             // Delete to the right side
                             if(view.getTranslationX() > listView.getWidth()/2){
@@ -303,7 +303,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
                     @Override
                     public void onSwipeStart(MotionEvent motionEvent, View view) {
-                        isSwipping = true;
+                        isSwiping = true;
                         super.onSwipeStart(motionEvent, view);
                     }
 

@@ -1,7 +1,5 @@
 package com.animatedlistview.tmax.library;
 
-import android.animation.ValueAnimator;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
@@ -50,11 +48,6 @@ public class ExpandCollapseAnimation extends Animation {
 
         if(animationValueChanged != null)
             animationValueChanged.onAnimationValueChanged(newHeight, change);
-    }
-
-    @Override
-    public void initialize(int width, int height, int parentWidth, int parentHeight) {
-        super.initialize(width, height, parentWidth, parentHeight);
     }
 
     @Override
