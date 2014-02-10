@@ -36,7 +36,7 @@ public class TouchEventHandler implements OnTouchListener {
             prevX = motionEvent.getRawX();
             swiping = true;
 
-        }else if(action == MotionEvent.ACTION_UP || ( swiping && action == MotionEvent.ACTION_CANCEL)){
+        }else if(action == MotionEvent.ACTION_UP || (swiping && action == MotionEvent.ACTION_CANCEL)){
             if(swiping){
                 onSwipeFinish(motionEvent, currentClickedView);
                 swiping = false;
@@ -51,6 +51,11 @@ public class TouchEventHandler implements OnTouchListener {
         return true;
     }
 
+    /**
+     * Find the Child View touched in the ListView from the coordinates in the MotionEvent
+     * @param motionEvent onTouch() MotionEvent
+     * @return clicked Child View
+     */
     private View getClickedView(MotionEvent motionEvent){
         // Find the child view that was touched (perform a hit test)
         Rect rect = new Rect();
