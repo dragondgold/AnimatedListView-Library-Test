@@ -42,6 +42,27 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
+
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                // In onItemClick() the View hast not yet updated the expand/collapse state
+                //  so we invert the state which will be the future state
+                if(pruebaAdapter.isExpanded(i)){
+                    Toast.makeText(MainActivity.this, "Item " + i + " collapsed", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(MainActivity.this, "Item " + i + " expanded", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
+        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Toast.makeText(MainActivity.this, "Item " + i + " long clicked", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+        });
     }
 
     @Override
