@@ -57,12 +57,25 @@ public class MainActivity extends Activity {
             case R.id.swipe_to_delete:
                 if(pruebaAdapter.isSwipeToDeleteEnabled()){
                     pruebaAdapter.setSwipeToDelete(false);
+                    item.setTitle("Enable Swipe to delete");
                     Toast.makeText(this, "Swipe to delete disable", Toast.LENGTH_SHORT).show();
                 }else{
                     pruebaAdapter.setSwipeToDelete(true);
+                    item.setTitle("Disable Swipe to delete");
                     Toast.makeText(this, "Swipe to delete enabled", Toast.LENGTH_SHORT).show();
                 }
                 break;
+
+            case R.id.enable_expansion:
+                if(pruebaAdapter.isExpansionEnabled()){
+                    pruebaAdapter.setEnableExpansion(false);
+                    item.setTitle("Enable item expansion");
+                    Toast.makeText(this, "Item expansion disabled", Toast.LENGTH_SHORT).show();
+                }else{
+                    pruebaAdapter.setEnableExpansion(true);
+                    item.setTitle("Disable item expansion");
+                    Toast.makeText(this, "Item expansion enabled", Toast.LENGTH_SHORT).show();
+                }
         }
         return true;
     }

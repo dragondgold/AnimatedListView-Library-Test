@@ -2,7 +2,6 @@ package com.animatedlistview.tmax.library;
 
 import android.content.Context;
 import android.support.v4.view.ViewCompat;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -31,6 +30,8 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
     private long expandAnimationDuration = 400;
     private long collapseAnimationDuration = 400;
 
+    private boolean enableExpansion = true;
+
     private OnItemDeleted onItemDeleted;
 
     /**
@@ -52,6 +53,22 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
         expandStateArray.addAll(Collections.nCopies(list.size(), false));
     }
 
+    public boolean isExpansionEnabled() {
+        return enableExpansion;
+    }
+
+    /**
+     * Enable or disable item expansion
+     * @param enableExpansion true for enable, false otherwise
+     */
+    public void setEnableExpansion(boolean enableExpansion) {
+        this.enableExpansion = enableExpansion;
+    }
+
+    /**
+     * Set listener for item deletion
+     * @param onItemDeleted callback
+     */
     public void setOnItemDeleted(OnItemDeleted onItemDeleted) {
         this.onItemDeleted = onItemDeleted;
     }
@@ -295,7 +312,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                     if(!listView.isClickable()) return;
                     int position = listView.getPositionForView(view);
 
-                    if(!isSwipeToDeleteEnabled()){
+                    if(!isSwipeToDeleteEnabled() && enableExpansion){
                         if(isExpanded(position)) collapse(position);
                         else expand(position);
                         listView.invalidate();
@@ -337,7 +354,8 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
         ViewPropertyAnimator.animate(view).translationX(target).setDuration(DEFAULT_DELETE_DURATION).setListener(new Animator.AnimatorListener() {
             @Override
-            public void onAnimationStart(Animator animator) {}
+            public void onAnimationStart(Animator animator) {
+            }
 
             @Override
             public void onAnimationEnd(Animator animator) {
@@ -347,18 +365,20 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 animation.setDuration(DEFAULT_DELETE_DURATION);
                 animation.setAnimationListener(new Animation.AnimationListener() {
                     @Override
-                    public void onAnimationStart(Animation animation) {}
+                    public void onAnimationStart(Animation animation) {
+                    }
 
                     @Override
                     public void onAnimationEnd(Animation animation) {
-                        if(onItemDeleted != null){
+                        if (onItemDeleted != null) {
                             // Delete item if returned value is true
-                            if(onItemDeleted.onItemDeleted(position, view)){
+                            if (onItemDeleted.onItemDeleted(position, view)) {
                                 updateExpandCollapseIndexes(position);
                                 remove(getItem(position));
                             }
-                            // Default action, delete item
-                        }else{
+                        }
+                        // Default action, delete item
+                        else {
                             updateExpandCollapseIndexes(position);
                             remove(getItem(position));
                         }
@@ -370,16 +390,19 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                     }
 
                     @Override
-                    public void onAnimationRepeat(Animation animation) {}
+                    public void onAnimationRepeat(Animation animation) {
+                    }
                 });
                 view.startAnimation(animation);
             }
 
             @Override
-            public void onAnimationCancel(Animator animator) {}
+            public void onAnimationCancel(Animator animator) {
+            }
 
             @Override
-            public void onAnimationRepeat(Animator animator) {}
+            public void onAnimationRepeat(Animator animator) {
+            }
         }).start();
     }
 

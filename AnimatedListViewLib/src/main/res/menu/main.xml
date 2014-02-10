@@ -3,7 +3,12 @@
     tools:context="com.animatedlistview.tmax.test.MainActivity" >
     
     <item android:id="@+id/swipe_to_delete"
-        android:title="Swipe to delete"
+        android:title="Enable Swipe to delete"
+        android:orderInCategory="100"
+        android:showAsAction="never" />
+
+    <item android:id="@+id/enable_expansion"
+        android:title="Disable item expansion"
         android:orderInCategory="100"
         android:showAsAction="never" />
 
