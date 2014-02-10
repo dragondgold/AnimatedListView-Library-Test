@@ -2,6 +2,7 @@ package com.animatedlistview.tmax.library;
 
 import android.graphics.Rect;
 import android.view.MotionEvent;
+import android.view.VelocityTracker;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.ListView;
@@ -11,20 +12,27 @@ public class TouchEventHandler implements OnTouchListener {
     private final ListView listView;
     private View currentClickedView;
     private boolean swiping = false;
+
+    private final VelocityTracker velocityTracker;
     private float prevX = 0;
+    private long prevTime = 0;
 
     public TouchEventHandler(ListView listView){
         this.listView = listView;
+        velocityTracker = VelocityTracker.obtain();
+
     }
 
     public boolean onTouch(final View view, final MotionEvent motionEvent) {
         int action = motionEvent.getAction();
 
         if(action == MotionEvent.ACTION_DOWN){
+            velocityTracker.addMovement(motionEvent);
             currentClickedView = getClickedView(motionEvent);
             prevX = motionEvent.getRawX();
 
         }else if(action == MotionEvent.ACTION_MOVE){
+            velocityTracker.addMovement(motionEvent);
             if(!swiping) onSwipeStart(motionEvent, view);
 
             if(motionEvent.getRawX() - prevX > 0){
@@ -34,12 +42,17 @@ public class TouchEventHandler implements OnTouchListener {
             }
 
             prevX = motionEvent.getRawX();
+            prevTime = motionEvent.getEventTime();
             swiping = true;
 
         }else if(action == MotionEvent.ACTION_UP || (swiping && action == MotionEvent.ACTION_CANCEL)){
+            velocityTracker.addMovement(motionEvent);
             if(swiping){
-                onSwipeFinish(motionEvent, currentClickedView);
+                // Compute velocity in pixels per milliseconds
+                velocityTracker.computeCurrentVelocity(1);
+                onSwipeFinish(motionEvent, currentClickedView, velocityTracker.getXVelocity());
                 swiping = false;
+                return true;
             }
             else{
                 onClick(motionEvent, currentClickedView);
@@ -83,7 +96,13 @@ public class TouchEventHandler implements OnTouchListener {
 
     public void onSwipeStart(MotionEvent motionEvent, final View view) {}
 
-    public void onSwipeFinish(MotionEvent motionEvent, final View view) {}
+    /**
+     * Callback when Swipe gesture has finished
+     * @param motionEvent MotionEvent that finished the Swipe gesture
+     * @param view View where whe MotionEvent occurred
+     * @param endVelocity velocity in pixels/ms when the Swipe gesture ended
+     */
+    public void onSwipeFinish(MotionEvent motionEvent, final View view, float endVelocity) {}
 
     public void onSwipeRight(MotionEvent motionEvent, final View view, float distance) {}
 

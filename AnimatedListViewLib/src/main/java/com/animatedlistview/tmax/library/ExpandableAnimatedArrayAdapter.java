@@ -265,6 +265,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
             listView.setOnTouchListener(new TouchEventHandler(listView){
                 @Override
                 public void onSwipeRight(MotionEvent motionEvent, View view, float distance) {
+                    if(!listView.isClickable()) return;
                     // If SwipeToDelete is enabled modify alpha and position of the View according to
                     //  the distance swiped
                     if(isSwipeToDeleteEnabled()){
@@ -278,6 +279,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
                 @Override
                 public void onSwipeLeft(MotionEvent motionEvent, View view, float distance) {
+                    if(!listView.isClickable()) return;
                     if(isSwipeToDeleteEnabled()){
                         view.setTranslationX(view.getTranslationX() + distance);
 
@@ -288,15 +290,16 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 }
 
                 @Override
-                public void onSwipeFinish(MotionEvent motionEvent, final View view) {
+                public void onSwipeFinish(MotionEvent motionEvent, final View view, float velocity) {
+                    if(!listView.isClickable()) return;
                     if(isSwipeToDeleteEnabled()){
                         // Delete to the right side
                         if(view.getTranslationX() > listView.getWidth()/2){
-                            animateDeletion(view, listView.getWidth());
+                            animateDeletion(view, listView.getWidth(), velocity);
                         }
                         // Delete to the left side
                         else if(view.getTranslationX() < -listView.getWidth()/2){
-                            animateDeletion(view, -listView.getWidth());
+                            animateDeletion(view, -listView.getWidth(), velocity);
                         }
                         // Animate View to default positions
                         else{
@@ -304,7 +307,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                             ViewPropertyAnimator.animate(view).setDuration(DEFAULT_DELETE_DURATION).alpha(1).start();
                         }
                     }
-                    super.onSwipeFinish(motionEvent, view);
+                    super.onSwipeFinish(motionEvent, view, velocity);
                 }
 
                 @Override
@@ -346,13 +349,17 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
      * Animates View deletion to the right or to the left
      * @param view View to animate
      * @param target target translation (listView.getWidth() to the right and -listView.getWidth() to the left)
+     * @param velocity velocity of the final Swipe gesture in pixels/ms
      */
-    private void animateDeletion (final View view, final int target){
+    private void animateDeletion (final View view, final int target, final float velocity){
         final int defaultHeight = view.getHeight();
         // Disable ListView clicks while playing animation
         listView.setClickable(false);
 
-        ViewPropertyAnimator.animate(view).translationX(target).setDuration(DEFAULT_DELETE_DURATION).setListener(new Animator.AnimatorListener() {
+        // v = d/t -> t = d/v
+        long duration = (long) (Math.abs(target - view.getTranslationX()) / velocity);
+
+        ViewPropertyAnimator.animate(view).translationX(target).setDuration(duration).setListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animator) {
             }
@@ -365,8 +372,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                 animation.setDuration(DEFAULT_DELETE_DURATION);
                 animation.setAnimationListener(new Animation.AnimationListener() {
                     @Override
-                    public void onAnimationStart(Animation animation) {
-                    }
+                    public void onAnimationStart(Animation animation) {}
 
                     @Override
                     public void onAnimationEnd(Animation animation) {
@@ -386,23 +392,21 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                         view.setTranslationX(0);
                         view.getLayoutParams().height = defaultHeight;
                         view.setAlpha(1);
+                        ViewPropertyAnimator.animate(view).setListener(null);
                         listView.setClickable(true);
                     }
 
                     @Override
-                    public void onAnimationRepeat(Animation animation) {
-                    }
+                    public void onAnimationRepeat(Animation animation) {}
                 });
                 view.startAnimation(animation);
             }
 
             @Override
-            public void onAnimationCancel(Animator animator) {
-            }
+            public void onAnimationCancel(Animator animator) {}
 
             @Override
-            public void onAnimationRepeat(Animator animator) {
-            }
+            public void onAnimationRepeat(Animator animator) {}
         }).start();
     }
 
