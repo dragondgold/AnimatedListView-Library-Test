@@ -14,6 +14,8 @@ import android.widget.ListView;
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.view.ViewPropertyAnimator;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> {
@@ -21,7 +23,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
     private static final int DEFAULT_DELETE_DURATION = 400;
     private final int expandableResource;
     private final int layoutResource;
-    private final SparseBooleanArray expandStateArray = new SparseBooleanArray();
+    private final ArrayList<Boolean> expandStateArray;
 
     private final Context context;
     private ListView listView;
@@ -44,6 +46,10 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
         this.expandableResource = expandableResource;
         this.layoutResource = layoutResource;
         this.context = context;
+
+        // Create the ArrayList and fill it with false state (collapsed)
+        expandStateArray = new ArrayList<Boolean>(list.size());
+        expandStateArray.addAll(Collections.nCopies(list.size(), false));
     }
 
     public void setOnItemDeleted(OnItemDeleted onItemDeleted) {
@@ -131,7 +137,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                expandStateArray.put(position, true);
+                expandStateArray.set(position, true);
                 ViewCompat.setHasTransientState(expandedView, false);
             }
 
@@ -190,7 +196,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                expandStateArray.put(position, false);
+                expandStateArray.set(position, false);
                 ViewCompat.setHasTransientState(expandedView, false);
             }
 
@@ -286,6 +292,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
                 @Override
                 public void onClick(MotionEvent motionEvent, View view) {
+                    if(!listView.isClickable()) return;
                     int position = listView.getPositionForView(view);
 
                     if(!isSwipeToDeleteEnabled()){
@@ -325,6 +332,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
      */
     private void animateDeletion (final View view, final int target){
         final int defaultHeight = view.getHeight();
+        listView.setClickable(false);
 
         ViewPropertyAnimator.animate(view).translationX(target).setDuration(DEFAULT_DELETE_DURATION).setListener(new Animator.AnimatorListener() {
             @Override
@@ -345,16 +353,19 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                         if(onItemDeleted != null){
                             // Delete item if returned value is true
                             if(onItemDeleted.onItemDeleted(position, view)){
+                                updateExpandCollapseIndexes(position);
                                 remove(getItem(position));
                             }
                             // Default action, delete item
                         }else{
+                            updateExpandCollapseIndexes(position);
                             remove(getItem(position));
                         }
 
                         view.setTranslationX(0);
                         view.getLayoutParams().height = defaultHeight;
                         view.setAlpha(1);
+                        listView.setClickable(true);
                     }
 
                     @Override
@@ -369,5 +380,13 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
             @Override
             public void onAnimationRepeat(Animator animator) {}
         }).start();
+    }
+
+    /**
+     * Update the indexes of the state of each View after a deletion has ocurred
+     * @param removedPosition View position that was removed
+     */
+    private void updateExpandCollapseIndexes(int removedPosition){
+        expandStateArray.remove(removedPosition);
     }
 }
