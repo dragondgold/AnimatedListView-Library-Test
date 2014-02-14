@@ -21,6 +21,7 @@ import java.util.List;
 public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> {
 
     private static final int DEFAULT_DELETE_DURATION = 400;
+
     private final int expandableResource;
     private final int layoutResource;
     private final ArrayList<Boolean> expandStateArray;
@@ -359,6 +360,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
 
         // v = d/t -> t = d/v
         long duration = (long) Math.abs((target - view.getTranslationX()) / velocity);
+        if(duration > DEFAULT_DELETE_DURATION) duration = DEFAULT_DELETE_DURATION;
 
         ViewPropertyAnimator.animate(view).translationX(target).setDuration(duration).setListener(new Animator.AnimatorListener() {
             @Override
