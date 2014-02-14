@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@SuppressWarnings("ConstantConditions")
 public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> {
 
     private static final int DEFAULT_DELETE_DURATION = 400;
@@ -357,12 +358,11 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
         listView.setClickable(false);
 
         // v = d/t -> t = d/v
-        long duration = (long) (Math.abs(target - view.getTranslationX()) / velocity);
+        long duration = (long) Math.abs((target - view.getTranslationX()) / velocity);
 
         ViewPropertyAnimator.animate(view).translationX(target).setDuration(duration).setListener(new Animator.AnimatorListener() {
             @Override
-            public void onAnimationStart(Animator animator) {
-            }
+            public void onAnimationStart(Animator animator) {}
 
             @Override
             public void onAnimationEnd(Animator animator) {
