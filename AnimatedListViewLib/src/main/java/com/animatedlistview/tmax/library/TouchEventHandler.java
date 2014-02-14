@@ -15,7 +15,6 @@ public class TouchEventHandler implements OnTouchListener {
 
     private final VelocityTracker velocityTracker;
     private float prevX = 0;
-    private long prevTime = 0;
 
     public TouchEventHandler(ListView listView){
         this.listView = listView;
@@ -42,7 +41,6 @@ public class TouchEventHandler implements OnTouchListener {
             }
 
             prevX = motionEvent.getRawX();
-            prevTime = motionEvent.getEventTime();
             swiping = true;
 
         }else if(action == MotionEvent.ACTION_UP || (swiping && action == MotionEvent.ACTION_CANCEL)){
