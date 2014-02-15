@@ -4,6 +4,7 @@ import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.ViewConfiguration;
 
 public abstract class TouchEventHandler implements OnTouchListener {
 
@@ -59,7 +60,10 @@ public abstract class TouchEventHandler implements OnTouchListener {
                 swiping = false;
             }
             else if(isClick){
-                dispatchToView = onClick(motionEvent, view);
+                // Dispatch click event only if it wasn't a long click
+                long time = motionEvent.getEventTime() - motionEvent.getDownTime();
+                if(time < ViewConfiguration.getLongPressTimeout())
+                    dispatchToView = onClick(motionEvent, view);
             }else{
                 dispatchToView = onOtherEvent(motionEvent, view);
             }

@@ -56,7 +56,8 @@ public final class ViewSwipeDeleteHelper {
      * @return true if we should dispatch the touch event to the ListView
      */
     public static boolean dispatchEventToView(){
-        return mTouchEventHandler.dispatchToView;
+        if(isSwipeToDeleteEnabled) return mTouchEventHandler.dispatchToView;
+        return true;
     }
 
     /**
@@ -91,7 +92,7 @@ public final class ViewSwipeDeleteHelper {
         @Override
         public boolean onDown(MotionEvent motionEvent, View view) {
             currentClickedView = getClickedView(motionEvent);
-            return true;
+            return false;
         }
 
         @Override
@@ -107,7 +108,7 @@ public final class ViewSwipeDeleteHelper {
         @Override
         public boolean onSwipeStart(MotionEvent motionEvent, View view) {
             isSwiping = true;
-            return false;
+            return true;
         }
 
         @Override

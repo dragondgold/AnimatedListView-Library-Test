@@ -67,7 +67,8 @@ public final class ViewExpandCollapseHelper {
      * @return true if we should dispatch the touch event to the ListView
      */
     public static boolean dispatchEventToView(){
-        return mTouchEventHandler.dispatchToView;
+        if(isExpandEnabled) return mTouchEventHandler.dispatchToView;
+        return true;
     }
 
     /**
