@@ -16,14 +16,14 @@
 
 ## Example
 ----
-* Create your custom adapter as you always do but extend `ExpandableAnimatedArrayAdapter` instead of `ArrayAdapter`
+* Create your custom adapter as you always do but extend `AnimatedArrayAdapter` instead of `ArrayAdapter`
 
 * Override `public View getItemView(int position, View convertView, ViewGroup parent)` (**DO NOT OVERRIDE `public View getItemView(int position, View convertView, ViewGroup parent)` IT IS USED INTERNALLY**)
 
 * On `getItemView()` do whatever you want to the `convertView` which is the View that will be displayed and then return it.
 
 ``` java
-public class PruebaExtendAdapter extends ExpandableAnimatedArrayAdapter<String> {
+public class PruebaExtendAdapter extends AnimatedArrayAdapter<String> {
 
     public PruebaExtendAdapter(Context context, int layoutResource, int expandableResource, List<String> mList) {
         super(context, layoutResource, expandableResource, mList);
