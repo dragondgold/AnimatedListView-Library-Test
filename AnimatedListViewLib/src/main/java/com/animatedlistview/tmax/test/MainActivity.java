@@ -2,10 +2,12 @@ package com.animatedlistview.tmax.test;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -61,6 +63,38 @@ public class MainActivity extends Activity {
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Toast.makeText(MainActivity.this, "Item " + i + " long clicked", Toast.LENGTH_SHORT).show();
                 return true;
+            }
+        });
+
+        mListView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
+        mListView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+            @Override
+            public void onItemCheckedStateChanged(ActionMode actionMode, int i, long l, boolean b) {
+                actionMode.setSubtitle(mListView.getCheckedItemCount() + " item(s) selected");
+            }
+
+            @Override
+            public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+                pruebaAdapter.multiChoiceModeEnabled();
+                actionMode.setTitle("Select Items");
+                actionMode.setSubtitle("1 item selected");
+                return true;
+            }
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
+                return true;
+            }
+
+            @Override
+            public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+                Toast.makeText(MainActivity.this, mListView.getCheckedItemCount() + " items were selected", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode actionMode) {
+                pruebaAdapter.multiChoiceModeDisabled();
             }
         });
     }

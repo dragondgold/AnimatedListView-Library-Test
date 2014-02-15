@@ -19,6 +19,9 @@ public abstract class AnimatedArrayAdapter<T> extends ArrayAdapter<T> implements
     private final Context context;
     private ListView listView;
 
+    private boolean prevExpansionEnabled;
+    private boolean prevSwipeDismissEnabled;
+
     private OnItemDeleted onItemDeleted;
 
     /**
@@ -34,6 +37,27 @@ public abstract class AnimatedArrayAdapter<T> extends ArrayAdapter<T> implements
         this.expandableResource = expandableResource;
         this.layoutResource = layoutResource;
         this.context = context;
+    }
+
+    /**
+     * This should be called when MultiChoiceMode is created so when the user click to select
+     * items the views doesn't get expanded
+     */
+    public void multiChoiceModeEnabled(){
+        prevExpansionEnabled = isExpansionEnabled();
+        prevSwipeDismissEnabled = isSwipeToDeleteEnabled();
+
+        setEnableExpansion(false);
+        setSwipeToDelete(false);
+    }
+
+    /**
+     * This should be called when MultiChoiceMode is destroyed so it restore the state saved in
+     * multiChoiceModeEnabled()
+     */
+    public void multiChoiceModeDisabled(){
+        setEnableExpansion(prevExpansionEnabled);
+        setSwipeToDelete(prevSwipeDismissEnabled);
     }
 
     public boolean isExpansionEnabled() {

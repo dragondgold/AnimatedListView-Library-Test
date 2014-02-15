@@ -3,7 +3,11 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:descendantFocusability="blocksDescendants"
+    android:background="?android:activatedBackgroundIndicator"
     android:id="@+id/item_linear_layout">
+
+    <!-- android:descendantFocusability="blocksDescendants" allows proper view clicking -->
+    <!-- android:background="?android:activatedBackgroundIndicator" allows MultiChoiceMode to select items -->
 
     <RelativeLayout
         android:layout_height="wrap_content"
