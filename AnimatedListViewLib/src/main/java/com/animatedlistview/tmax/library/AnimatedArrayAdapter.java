@@ -11,7 +11,7 @@ import android.widget.ListView;
 import java.util.List;
 
 @SuppressWarnings("ConstantConditions")
-public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> implements OnItemDeleted{
+public abstract class AnimatedArrayAdapter<T> extends ArrayAdapter<T> implements OnItemDeleted{
 
     private final int expandableResource;
     private final int layoutResource;
@@ -22,13 +22,13 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
     private OnItemDeleted onItemDeleted;
 
     /**
-     * ExpandableAnimatedArrayAdapter constructor
+     * AnimatedArrayAdapter constructor
      * @param context context from the ListView
      * @param layoutResource layout containing the child for each row
      * @param expandableResource layout id which will be expanded/collapsed
      * @param list List<T> containing the ArrayAdapter<T> data
      */
-    public ExpandableAnimatedArrayAdapter(Context context, int layoutResource, int expandableResource, List<T> list) {
+    public AnimatedArrayAdapter(Context context, int layoutResource, int expandableResource, List<T> list) {
         super(context, layoutResource, list);
 
         this.expandableResource = expandableResource;
@@ -53,15 +53,11 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
     }
 
     /**
-     * Set listener for item deletion
+     * Set listener for item deletion. Set to null for deletion.
      * @param onItemDeleted callback
      */
     public void setOnItemDeleted(OnItemDeleted onItemDeleted) {
         this.onItemDeleted = onItemDeleted;
-    }
-
-    public void removeOnItemDeleted(OnItemDeleted onItemDeleted) {
-        onItemDeleted = null;
     }
 
     /**
@@ -108,7 +104,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
         if(listView == null){
             listView = (ListView) parent;
 
-            ViewSwipeDeleteHelper.init(listView, ExpandableAnimatedArrayAdapter.this);
+            ViewSwipeDeleteHelper.init(listView, AnimatedArrayAdapter.this);
             ViewExpandCollapseHelper.init(listView, this, expandableResource);
 
             listView.setOnTouchListener(new View.OnTouchListener() {
@@ -117,6 +113,7 @@ public abstract class ExpandableAnimatedArrayAdapter<T> extends ArrayAdapter<T> 
                     ViewSwipeDeleteHelper.onTouchEvent(view, motionEvent);
                     ViewExpandCollapseHelper.onTouchEvent(view, motionEvent);
 
+                    // Dispatch touch events to ListView
                     if(ViewSwipeDeleteHelper.dispatchEventToView() && ViewExpandCollapseHelper.dispatchEventToView())
                         listView.onTouchEvent(motionEvent);
                     return true;

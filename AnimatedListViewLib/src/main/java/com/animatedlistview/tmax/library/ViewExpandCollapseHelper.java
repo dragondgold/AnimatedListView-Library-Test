@@ -11,7 +11,7 @@ import android.widget.ListView;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class ViewExpandCollapseHelper {
+public final class ViewExpandCollapseHelper {
 
     private static boolean isExpandEnabled = true;
 

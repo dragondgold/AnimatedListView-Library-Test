@@ -9,7 +9,7 @@ import android.widget.ListView;
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.view.ViewPropertyAnimator;
 
-public class ViewSwipeDeleteHelper {
+public final class ViewSwipeDeleteHelper {
 
     private static boolean isSwipeToDeleteEnabled = false;
     private static final int DEFAULT_DELETE_DURATION = 400;
