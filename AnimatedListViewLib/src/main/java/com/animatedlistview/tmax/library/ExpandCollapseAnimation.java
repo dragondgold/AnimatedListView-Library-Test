@@ -4,9 +4,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 
-/**
- * Created by andres on 2/5/14.
- */
+@SuppressWarnings("ConstantConditions")
 public class ExpandCollapseAnimation extends Animation {
 
     private final int targetHeight;
@@ -20,16 +18,12 @@ public class ExpandCollapseAnimation extends Animation {
         this.expand = expand;
     }
 
+    /**
+     * Callback for every time applyTransformation() is called
+     * @param animationValueChanged OnAnimationValueChanged Interface. Set to null to remove.
+     */
     public void setAnimationTransformationListener(OnAnimationValueChanged animationValueChanged){
         this.animationValueChanged = animationValueChanged;
-    }
-
-    public void removeAnimationTransformationListener(){
-        animationValueChanged = null;
-    }
-
-    public int getTargetHeight(){
-        return targetHeight;
     }
 
     @Override

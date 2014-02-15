@@ -31,7 +31,7 @@ public abstract class AnimatedArrayAdapter<T> extends ArrayAdapter<T> implements
      * @param expandableResource layout id which will be expanded/collapsed
      * @param list List<T> containing the ArrayAdapter<T> data
      */
-    public AnimatedArrayAdapter(Context context, int layoutResource, int expandableResource, List<T> list) {
+    protected AnimatedArrayAdapter(Context context, int layoutResource, int expandableResource, List<T> list) {
         super(context, layoutResource, list);
 
         this.expandableResource = expandableResource;
@@ -120,7 +120,7 @@ public abstract class AnimatedArrayAdapter<T> extends ArrayAdapter<T> implements
      * @param parent ViewGroup that holds all the views (ListView itself)
      * @return View to be displayed at the given position
      */
-    public abstract View getItemView(int position, View convertView, ViewGroup parent);
+    protected abstract View getItemView(int position, View convertView, ViewGroup parent);
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {

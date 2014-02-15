@@ -7,6 +7,7 @@ import android.view.animation.Animation;
 import android.widget.ListView;
 
 import com.nineoldandroids.animation.Animator;
+import com.nineoldandroids.view.ViewHelper;
 import com.nineoldandroids.view.ViewPropertyAnimator;
 
 public final class ViewSwipeDeleteHelper {
@@ -65,6 +66,7 @@ public final class ViewSwipeDeleteHelper {
      * @param motionEvent onTouch() MotionEvent
      * @return clicked Child View
      */
+    @SuppressWarnings("ConstantConditions")
     private static View getClickedView(MotionEvent motionEvent){
         // Find the child view that was touched (perform a hit test)
         Rect rect = new Rect();
@@ -117,11 +119,11 @@ public final class ViewSwipeDeleteHelper {
             if(!listView.isClickable()) return false;
             if(isSwipeToDeleteEnabled){
                 // Delete to the right side
-                if(currentClickedView.getTranslationX() > listView.getWidth()/2){
+                if(ViewHelper.getTranslationX(currentClickedView) > listView.getWidth()/2){
                     animateDeletion(currentClickedView, listView.getWidth(), endVelocity);
                 }
                 // Delete to the left side
-                else if(currentClickedView.getTranslationX() < -listView.getWidth()/2){
+                else if(ViewHelper.getTranslationX(currentClickedView) < -listView.getWidth()/2){
                     animateDeletion(currentClickedView, -listView.getWidth(), endVelocity);
                 }
                 // Animate View to default positions element is not removed
@@ -139,10 +141,10 @@ public final class ViewSwipeDeleteHelper {
             // If SwipeToDelete is enabled modify alpha and position of the View according to
             //  the distance swiped
             if(isSwipeToDeleteEnabled){
-                currentClickedView.setTranslationX(currentClickedView.getTranslationX() + distance);
+                ViewHelper.setTranslationX(currentClickedView, ViewHelper.getTranslationX(currentClickedView) + distance);
 
-                float alpha = currentClickedView.getTranslationX() / (listView.getWidth());
-                currentClickedView.setAlpha(1-alpha);
+                float alpha = ViewHelper.getTranslationX(currentClickedView) / (listView.getWidth());
+                ViewHelper.setAlpha(currentClickedView, 1-alpha);
             }
             return false;
         }
@@ -151,10 +153,10 @@ public final class ViewSwipeDeleteHelper {
         public boolean onSwipeLeft(MotionEvent motionEvent, View view, float distance) {
             if(!listView.isClickable()) return false;
             if(isSwipeToDeleteEnabled){
-                currentClickedView.setTranslationX(currentClickedView.getTranslationX() + distance);
+                ViewHelper.setTranslationX(currentClickedView, ViewHelper.getTranslationX(currentClickedView) + distance);
 
-                float alpha = -currentClickedView.getTranslationX() / (listView.getWidth());
-                currentClickedView.setAlpha(1-alpha);
+                float alpha = -ViewHelper.getTranslationX(currentClickedView) / (listView.getWidth());
+                ViewHelper.setAlpha(currentClickedView, 1-alpha);
             }
             return false;
         }
@@ -172,7 +174,7 @@ public final class ViewSwipeDeleteHelper {
         listView.setClickable(false);
 
         // v = d/t -> t = d/v
-        long duration = (long) Math.abs((target - view.getTranslationX()) / velocity);
+        long duration = (long) Math.abs((target - ViewHelper.getTranslationX(view)) / velocity);
         if(duration > DEFAULT_DELETE_DURATION) duration = DEFAULT_DELETE_DURATION;
 
         ViewPropertyAnimator.animate(view).translationX(target).setDuration(duration).setListener(new Animator.AnimatorListener() {
@@ -191,13 +193,14 @@ public final class ViewSwipeDeleteHelper {
                     public void onAnimationStart(Animation animation) {
                     }
 
+                    @SuppressWarnings("ConstantConditions")
                     @Override
                     public void onAnimationEnd(Animation animation) {
                         mOnItemDeleted.onItemDeleted(position, view);
 
-                        view.setTranslationX(0);
+                        ViewHelper.setTranslationX(view, 0);
                         view.getLayoutParams().height = defaultHeight;
-                        view.setAlpha(1);
+                        ViewHelper.setAlpha(view, 1);
                         ViewPropertyAnimator.animate(view).setListener(null);
                         listView.setClickable(true);
                     }

@@ -118,6 +118,7 @@ public abstract class TouchEventHandler implements OnTouchListener {
      * onSwipeRight() callback
      * @param motionEvent MotionEvent
      * @param view Clicked View
+     * @param distance distance swiped since the last event
      * @return true if the event should be dispatched to the ListView
      */
     public abstract boolean onSwipeRight(MotionEvent motionEvent, final View view, float distance);
@@ -126,6 +127,7 @@ public abstract class TouchEventHandler implements OnTouchListener {
      * onSwipeLeft() callback
      * @param motionEvent MotionEvent
      * @param view Clicked View
+     * @param distance distance swiped since the last event. It's negative because of swiping left
      * @return true if the event should be dispatched to the ListView
      */
     public abstract boolean onSwipeLeft(MotionEvent motionEvent, final View view, float distance);
