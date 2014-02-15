@@ -1,25 +1,21 @@
 package com.animatedlistview.tmax.library;
 
-import android.graphics.Rect;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.View.OnTouchListener;
-import android.widget.ListView;
 
-public class TouchEventHandler implements OnTouchListener {
+public abstract class TouchEventHandler implements OnTouchListener {
 
-    private final ListView listView;
-    private View currentClickedView;
     private boolean swiping = false;
+    private boolean isClick = false;
+    public boolean dispatchToView = false;
 
     private final VelocityTracker velocityTracker;
-    private float prevX = 0;
+    private float prevX = 0, prevY = 0;
 
-    public TouchEventHandler(ListView listView){
-        this.listView = listView;
+    public TouchEventHandler(){
         velocityTracker = VelocityTracker.obtain();
-
     }
 
     public boolean onTouch(final View view, final MotionEvent motionEvent) {
@@ -27,72 +23,84 @@ public class TouchEventHandler implements OnTouchListener {
 
         if(action == MotionEvent.ACTION_DOWN){
             velocityTracker.addMovement(motionEvent);
-            currentClickedView = getClickedView(motionEvent);
+
             prevX = motionEvent.getRawX();
+            prevY = motionEvent.getRawY();
+            isClick = true;
+
+            dispatchToView = onDown(motionEvent, view);
 
         }else if(action == MotionEvent.ACTION_MOVE){
+            isClick = false;
             velocityTracker.addMovement(motionEvent);
-            if(!swiping) onSwipeStart(motionEvent, view);
 
-            if(motionEvent.getRawX() - prevX > 0){
-                onSwipeRight(motionEvent, currentClickedView, motionEvent.getRawX() - prevX);
+            if(Math.abs(motionEvent.getRawX() - prevX) > Math.abs(motionEvent.getRawY() - prevY)){
+                if(!swiping) dispatchToView = onSwipeStart(motionEvent, view);
+                swiping = true;
+
+                if(motionEvent.getRawX() - prevX > 0){
+                    dispatchToView = onSwipeRight(motionEvent, view, motionEvent.getRawX() - prevX);
+                }else{
+                    dispatchToView = onSwipeLeft(motionEvent, view, motionEvent.getRawX() - prevX);
+                }
             }else{
-                onSwipeLeft(motionEvent, currentClickedView, motionEvent.getRawX() - prevX);
+                dispatchToView = onOtherEvent(motionEvent, view);
             }
 
+            prevY = motionEvent.getRawY();
             prevX = motionEvent.getRawX();
-            swiping = true;
 
         }else if(action == MotionEvent.ACTION_UP || (swiping && action == MotionEvent.ACTION_CANCEL)){
             velocityTracker.addMovement(motionEvent);
             if(swiping){
                 // Compute velocity in pixels per milliseconds
                 velocityTracker.computeCurrentVelocity(1);
-                onSwipeFinish(motionEvent, currentClickedView, velocityTracker.getXVelocity());
+                dispatchToView = onSwipeFinish(motionEvent, view, velocityTracker.getXVelocity());
                 swiping = false;
-                return true;
             }
-            else{
-                onClick(motionEvent, currentClickedView);
+            else if(isClick){
+                dispatchToView = onClick(motionEvent, view);
+            }else{
+                dispatchToView = onOtherEvent(motionEvent, view);
             }
+        }else{
+            dispatchToView = onOtherEvent(motionEvent, view);
         }
-        // Dispatch touch event to the ListView if we are not swiping away a child View so we don't scroll the list
-        if(!swiping) listView.onTouchEvent(motionEvent);
 
         return true;
     }
 
     /**
-     * Find the Child View touched in the ListView from the coordinates in the MotionEvent
-     * @param motionEvent onTouch() MotionEvent
-     * @return clicked Child View
+     * onClick() callback
+     * @param motionEvent MotionEvent
+     * @param view Clicked View
+     * @return true if the event should be dispatched to parent View
      */
-    private View getClickedView(MotionEvent motionEvent){
-        // Find the child view that was touched (perform a hit test)
-        Rect rect = new Rect();
-        int childCount = listView.getChildCount();
-        int[] listViewCoords = new int[2];
+    public abstract boolean onClick(MotionEvent motionEvent, final View view);
 
-        listView.getLocationOnScreen(listViewCoords);
-        int x = (int) motionEvent.getRawX() - listViewCoords[0];
-        int y = (int) motionEvent.getRawY() - listViewCoords[1];
+    /**
+     * onDown() callback
+     * @param motionEvent MotionEvent
+     * @param view Clicked View
+     * @return true if the event should be dispatched to the ListView
+     */
+    public abstract boolean onDown(MotionEvent motionEvent, final View view);
 
-        View child;
-        View clickedView = null;
-        for (int i = 0; i < childCount; i++) {
-            child = listView.getChildAt(i);
-            child.getHitRect(rect);
-            if (rect.contains(x,y)) {
-                clickedView = child;  // Found View
-                break;
-            }
-        }
-        return clickedView;
-    }
+    /**
+     * Callback called when none of the others callback are called
+     * @param motionEvent MotionEvent
+     * @param view Clicked View
+     * @return true if the event should be dispatched to the ListView
+     */
+    public abstract boolean onOtherEvent(MotionEvent motionEvent, final View view);
 
-    public void onClick(MotionEvent motionEvent, final View view) {}
-
-    public void onSwipeStart(MotionEvent motionEvent, final View view) {}
+    /**
+     * Called when a swipe gesture starts
+     * @param motionEvent MotionEvent
+     * @param view Clicked View
+     * @return true if the event should be dispatched to the ListView
+     */
+    public abstract boolean onSwipeStart(MotionEvent motionEvent, final View view);
 
     /**
      * Callback when Swipe gesture has finished
@@ -100,10 +108,22 @@ public class TouchEventHandler implements OnTouchListener {
      * @param view View where whe MotionEvent occurred
      * @param endVelocity velocity in pixels/ms when the Swipe gesture ended
      */
-    public void onSwipeFinish(MotionEvent motionEvent, final View view, float endVelocity) {}
+    public abstract boolean onSwipeFinish(MotionEvent motionEvent, final View view, float endVelocity);
 
-    public void onSwipeRight(MotionEvent motionEvent, final View view, float distance) {}
+    /**
+     * onSwipeRight() callback
+     * @param motionEvent MotionEvent
+     * @param view Clicked View
+     * @return true if the event should be dispatched to the ListView
+     */
+    public abstract boolean onSwipeRight(MotionEvent motionEvent, final View view, float distance);
 
-    public void onSwipeLeft(MotionEvent motionEvent, final View view, float distance) {}
+    /**
+     * onSwipeLeft() callback
+     * @param motionEvent MotionEvent
+     * @param view Clicked View
+     * @return true if the event should be dispatched to the ListView
+     */
+    public abstract boolean onSwipeLeft(MotionEvent motionEvent, final View view, float distance);
 
 }
