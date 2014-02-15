@@ -7,6 +7,7 @@
 * Fully Animated ExpandableListView
 * Fully Animated ListView
 * Swipe to delete
+* Supports Android 1.6+
 * If you would like an specific feature [create a new issue](https://github.com/dragondgold/AnimatedListView-Library-Test/issues/new) explaining the feature you would like me to add
 
 ## Usage

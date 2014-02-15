@@ -216,6 +216,7 @@ public final class ViewExpandCollapseHelper {
      * @param motionEvent onTouch() MotionEvent
      * @return clicked Child View
      */
+    @SuppressWarnings("ConstantConditions")
     private static View getClickedView(MotionEvent motionEvent){
         // Find the child view that was touched (perform a hit test)
         Rect rect = new Rect();
