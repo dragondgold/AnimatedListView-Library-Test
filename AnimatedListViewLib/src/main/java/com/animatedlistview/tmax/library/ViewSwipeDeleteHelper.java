@@ -4,6 +4,7 @@ import android.graphics.Rect;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.nineoldandroids.animation.Animator;
@@ -19,6 +20,8 @@ public final class ViewSwipeDeleteHelper {
     private static ListView listView;
     private static View currentClickedView;
     private static OnItemDeleted mOnItemDeleted;
+
+    private static AdapterView.OnItemLongClickListener longClickListener;
 
     /**
      * Init the helper class. This must be called before anything else.
@@ -37,7 +40,7 @@ public final class ViewSwipeDeleteHelper {
      */
     public static void onTouchEvent (View view, MotionEvent motionEvent){
         // Dispatch the touch event to the event handler
-        mTouchEventHandler.onTouch(view, motionEvent);
+        if(isEnabled()) mTouchEventHandler.onTouch(view, motionEvent);
     }
 
     /**
@@ -46,6 +49,19 @@ public final class ViewSwipeDeleteHelper {
      */
     public static void setEnabled (boolean state){
         isSwipeToDeleteEnabled = state;
+
+        // Save and disable LongItemClickListener of the ListView
+        if(isEnabled()){
+            longClickListener = listView.getOnItemLongClickListener();
+            listView.setOnItemLongClickListener(null);
+        }
+        // Restore LongItemClickListener if ViewReorderHelp is disabled. We check for null in case the user
+        //  disable ViewReorderHelper without enabling it before so we avoid setting it to a null value when
+        //  a current listener exists
+        else {
+            if(listView.getOnItemLongClickListener() == null)
+                listView.setOnItemLongClickListener(longClickListener);
+        }
     }
 
     public static boolean isEnabled(){
@@ -94,11 +110,16 @@ public final class ViewSwipeDeleteHelper {
         @Override
         public boolean onDown(MotionEvent motionEvent, View view) {
             currentClickedView = getClickedView(motionEvent);
-            return false;
+            return true;
         }
 
         @Override
         public boolean onClick(MotionEvent motionEvent, View view) {
+            return true;
+        }
+
+        @Override
+        public boolean onLongClick(MotionEvent motionEvent, View view) {
             return true;
         }
 
@@ -109,15 +130,15 @@ public final class ViewSwipeDeleteHelper {
 
         @Override
         public boolean onSwipeStart(MotionEvent motionEvent, View view) {
-            isSwiping = true;
             return true;
         }
 
         @Override
         public boolean onSwipeFinish(MotionEvent motionEvent, View view, float endVelocity) {
-            isSwiping = false;
             if(!listView.isClickable()) return false;
-            if(isSwipeToDeleteEnabled){
+            if(isSwiping){
+                isSwiping = false;
+
                 // Delete to the right side
                 if(ViewHelper.getTranslationX(currentClickedView) > listView.getWidth()/2){
                     animateDeletion(currentClickedView, listView.getWidth(), endVelocity);
@@ -132,33 +153,43 @@ public final class ViewSwipeDeleteHelper {
                     ViewPropertyAnimator.animate(currentClickedView).setDuration(DEFAULT_DELETE_DURATION).alpha(1).start();
                 }
             }
-            return false;
+            return true;
         }
 
         @Override
         public boolean onSwipeRight(MotionEvent motionEvent, View view, float distance) {
             if(!listView.isClickable()) return false;
+
             // If SwipeToDelete is enabled modify alpha and position of the View according to
             //  the distance swiped
-            if(isSwipeToDeleteEnabled){
-                ViewHelper.setTranslationX(currentClickedView, ViewHelper.getTranslationX(currentClickedView) + distance);
+            isSwiping = true;
+            ViewHelper.setTranslationX(currentClickedView, ViewHelper.getTranslationX(currentClickedView) + distance);
 
-                float alpha = ViewHelper.getTranslationX(currentClickedView) / (listView.getWidth());
-                ViewHelper.setAlpha(currentClickedView, 1-alpha);
-            }
+            float alpha = ViewHelper.getTranslationX(currentClickedView) / (listView.getWidth());
+            ViewHelper.setAlpha(currentClickedView, 1 - alpha);
             return false;
         }
 
         @Override
         public boolean onSwipeLeft(MotionEvent motionEvent, View view, float distance) {
             if(!listView.isClickable()) return false;
-            if(isSwipeToDeleteEnabled){
-                ViewHelper.setTranslationX(currentClickedView, ViewHelper.getTranslationX(currentClickedView) + distance);
 
-                float alpha = -ViewHelper.getTranslationX(currentClickedView) / (listView.getWidth());
-                ViewHelper.setAlpha(currentClickedView, 1-alpha);
-            }
+            isSwiping = true;
+            ViewHelper.setTranslationX(currentClickedView, ViewHelper.getTranslationX(currentClickedView) + distance);
+
+            float alpha = -ViewHelper.getTranslationX(currentClickedView) / (listView.getWidth());
+            ViewHelper.setAlpha(currentClickedView, 1-alpha);
             return false;
+        }
+
+        @Override
+        public boolean onSwipeUp(MotionEvent motionEvent, View view, float distance) {
+            return !isSwiping;
+        }
+
+        @Override
+        public boolean onSwipeDown(MotionEvent motionEvent, View view, float distance) {
+            return !isSwiping;
         }
     };
 
